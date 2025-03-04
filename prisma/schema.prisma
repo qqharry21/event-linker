@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  Event Event[]
+  RSVP  RSVP[]
+}
+
+model Event {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  location    String
+  background  String?
+  createdById String    @db.ObjectId
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  rsvps RSVP[] // One-to-many relationship
+}
+
+enum RSVP_STATUS {
+  ACCEPTED
+  DECLINED
+  PENDING
+}
+
+model RSVP {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String      @db.ObjectId
+  event     Event       @relation(fields: [eventId], references: [id])
+  userId    String      @db.ObjectId
+  user      User        @relation(fields: [userId], references: [id])
+  status    RSVP_STATUS
+  comment   String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  clerkUserId String
+  action      String
+  timestamp   DateTime @default(now())
+  metadata    Json
+}
