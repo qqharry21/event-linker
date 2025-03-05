@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 
 const tabs = [
   { name: 'Overview', slug: '' },
-  { name: 'Create Event', slug: 'create-event' },
-  { name: 'History', slug: 'activity' },
+  { name: 'Events', slug: 'events' },
+  { name: 'History', slug: 'history' },
   { name: 'Profile', slug: 'profile' },
 ];
 

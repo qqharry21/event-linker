@@ -14,6 +14,5 @@ export default async function OverviewPage() {
   console.log('🚨 - user', user);
 
   await sleep(5000);
-
   return <>Dashboard</>;
 }
