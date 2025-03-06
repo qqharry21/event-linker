@@ -26,7 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        layout: {
+          privacyPageUrl: `/privacy`,
+          termsPageUrl: `/terms`,
+          shimmer: false,
+        },
+      }}>
       <html lang='en'>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <Header />

@@ -19,7 +19,7 @@ export const Header = () => {
 
   const renderButtons = useMemo(() => {
     const buttons = routeButtonConfig[segment ?? 'default'];
-    return buttons.map((button) => {
+    return buttons?.map((button) => {
       switch (button) {
         case 'sign-in':
           return (
