@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useSelectedLayoutSegment } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import Link from "next/link";
+import { useSelectedLayoutSegment } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const tabs = [
-  { name: 'Overview', slug: '' },
-  { name: 'Events', slug: 'events' },
-  { name: 'History', slug: 'history' },
-  { name: 'Profile', slug: 'profile' },
+  { name: "Overview", slug: "" },
+  { name: "Events", slug: "events" },
+  { name: "History", slug: "history" },
+  { name: "Profile", slug: "profile" },
 ];
 
 export default function DashboardTab() {
-  const segment = useSelectedLayoutSegment('tabs');
+  const segment = useSelectedLayoutSegment("tabs");
   const targetIndex =
     tabs.findIndex((tab) => tab.slug === segment) !== -1
       ? tabs.findIndex((tab) => tab.slug === segment)
@@ -21,7 +21,7 @@ export default function DashboardTab() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(targetIndex);
   const [hoverStyle, setHoverStyle] = useState({});
-  const [activeStyle, setActiveStyle] = useState({ left: '0px', width: '0px' });
+  const [activeStyle, setActiveStyle] = useState({ left: "0px", width: "0px" });
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
   useEffect(() => {
@@ -63,10 +63,10 @@ export default function DashboardTab() {
   }, [hoveredIndex]);
 
   return (
-    <div className='relative'>
+    <div className="relative">
       {/* Hover Highlight */}
       <div
-        className='absolute h-[30px] transition-all duration-300 ease-out bg-[#0e0f1114] dark:bg-[#ffffff1a] rounded-[6px] flex items-center'
+        className="absolute flex h-[30px] items-center rounded-[6px] bg-[#0e0f1114] transition-all duration-300 ease-out dark:bg-[#ffffff1a]"
         style={{
           ...hoverStyle,
           opacity: hoveredIndex !== null ? 1 : 0,
@@ -75,12 +75,12 @@ export default function DashboardTab() {
 
       {/* Active Indicator */}
       <div
-        className='absolute bottom-[-6px] h-[2px] bg-[#0e0f11] dark:bg-white transition-all duration-300 ease-out'
+        className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] transition-all duration-300 ease-out dark:bg-white"
         style={activeStyle}
       />
 
       {/* Tabs */}
-      <div className='relative flex justify-center space-x-[6px] items-center'>
+      <div className="relative flex items-center justify-center space-x-[6px]">
         {tabs.map((tab, index) => (
           <Link
             key={index}
@@ -90,15 +90,16 @@ export default function DashboardTab() {
                 tabRefs.current[index] = el;
               }
             }}
-            className={`px-3 py-2 cursor-pointer transition-colors duration-300 h-[30px] ${
+            className={`h-[30px] cursor-pointer px-3 py-2 transition-colors duration-300 ${
               index === activeIndex
-                ? 'text-[#0e0e10] dark:text-white'
-                : 'text-[#0e0f1199] dark:text-[#ffffff99]'
+                ? "text-[#0e0e10] dark:text-white"
+                : "text-[#0e0f1199] dark:text-[#ffffff99]"
             }`}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
-            onClick={() => setActiveIndex(index)}>
-            <div className='text-sm font-[var(--www-mattmannucci-me-geist-regular-font-family)] leading-5 whitespace-nowrap flex items-center justify-center h-full'>
+            onClick={() => setActiveIndex(index)}
+          >
+            <div className="flex h-full items-center justify-center text-sm leading-5 font-[var(--www-mattmannucci-me-geist-regular-font-family)] whitespace-nowrap">
               {tab.name}
             </div>
           </Link>

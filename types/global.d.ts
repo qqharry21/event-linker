@@ -1,5 +1,10 @@
-import * as Types from '@prisma/client';
+import * as Types from "@prisma/client";
 
 export { Types };
 
-declare global {}
+export {};
+declare global {
+  interface PropsWithChildren {
+    children: React.ReactNode | React.ReactNode[];
+  }
+}

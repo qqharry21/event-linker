@@ -1,5 +1,5 @@
-import { sleep } from '@/lib/utils';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { sleep } from "@/lib/utils";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export default async function OverviewPage() {
   const { userId } = await auth();
@@ -11,7 +11,7 @@ export default async function OverviewPage() {
 
   // Get the Backend API User object when you need access to the user's information
   const user = await currentUser();
-  console.log('🚨 - user', user);
+  console.log("🚨 - user", user);
 
   await sleep(5000);
   return <>Dashboard</>;
