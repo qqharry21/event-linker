@@ -12,7 +12,6 @@ import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
 import { useMemo } from "react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
 const routeButtonConfig: Record<string, Array<string>> = {
@@ -57,12 +56,7 @@ export const Header = () => {
   }, [segment]);
 
   return (
-    <header
-      className={cn(
-        "bg-background sticky top-0 z-10 w-full px-4 md:px-6",
-        segment?.includes("dashboard") ? "" : "shadow-sm",
-      )}
-    >
+    <header className="bg-background sticky top-0 z-10 w-full px-4 shadow-sm md:px-6">
       <div className="container mx-auto flex h-20 items-center">
         <Link href="/" className="mr-6" prefetch={false}>
           <PartyPopperIcon />

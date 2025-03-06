@@ -11,12 +11,11 @@ export const metadata = {
 
 export default function Layout({ tabs }: { tabs: React.ReactNode }) {
   return (
-    <>
+    <div className="container mx-auto h-full min-h-[calc(100dvh-80px)] overflow-hidden md:flex">
       <DashboardTab />
-
-      <main className="mt-4 w-full px-4 md:mt-6 md:px-6">
-        <div className="container mx-auto overflow-hidden">{tabs}</div>
+      <main className="border-secondary w-full flex-1 border-l p-4 pt-0 md:p-6">
+        {tabs}
       </main>
-    </>
+    </div>
   );
 }
