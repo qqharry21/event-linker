@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Header } from "@/components/header";
+import MotionProvider from "@/components/motion-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,23 +27,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      appearance={{
-        layout: {
-          privacyPageUrl: `/privacy`,
-          termsPageUrl: `/terms`,
-          shimmer: false,
-        },
-      }}
-    >
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <Header />
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <MotionProvider>
+      <ClerkProvider
+        appearance={{
+          layout: {
+            privacyPageUrl: `/privacy`,
+            termsPageUrl: `/terms`,
+            shimmer: false,
+          },
+        }}
+      >
+        <html lang="en">
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+            <Header />
+            {children}
+          </body>
+        </html>
+      </ClerkProvider>
+    </MotionProvider>
   );
 }

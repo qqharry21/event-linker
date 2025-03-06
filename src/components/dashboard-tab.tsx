@@ -1,10 +1,16 @@
 "use client";
 
+import { motion } from "motion/react";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
-const tabs = [
+type Tab = {
+  name: string;
+  slug: string;
+};
+
+const tabs: Tab[] = [
   { name: "Overview", slug: "" },
   { name: "Events", slug: "events" },
   { name: "History", slug: "history" },
@@ -18,93 +24,58 @@ export default function DashboardTab() {
       ? tabs.findIndex((tab) => tab.slug === segment)
       : 0;
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(targetIndex);
-  const [hoverStyle, setHoverStyle] = useState({});
-  const [activeStyle, setActiveStyle] = useState({ left: "0px", width: "0px" });
-  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-
-  useEffect(() => {
-    // Update activeStyle when activeIndex changes
-    const activeElement = tabRefs.current[activeIndex];
-    if (activeElement) {
-      const { offsetLeft, offsetWidth } = activeElement;
-      setActiveStyle({
-        left: `${offsetLeft}px`,
-        width: `${offsetWidth}px`,
-      });
-    }
-  }, [activeIndex]);
-
-  useEffect(() => {
-    // Set activeStyle for the initial render based on the targetIndex
-    const initialActiveElement = tabRefs.current[targetIndex];
-    if (initialActiveElement) {
-      const { offsetLeft, offsetWidth } = initialActiveElement;
-      setActiveStyle({
-        left: `${offsetLeft}px`,
-        width: `${offsetWidth}px`,
-      });
-    }
-  }, [targetIndex]); // Ensure this runs after targetIndex is set
-
-  useEffect(() => {
-    // Set hoverStyle when hoveredIndex changes
-    if (hoveredIndex !== null) {
-      const hoveredElement = tabRefs.current[hoveredIndex];
-      if (hoveredElement) {
-        const { offsetLeft, offsetWidth } = hoveredElement;
-        setHoverStyle({
-          left: `${offsetLeft}px`,
-          width: `${offsetWidth}px`,
-        });
-      }
-    }
-  }, [hoveredIndex]);
 
   return (
-    <div className="relative">
-      {/* Hover Highlight */}
-      <div
-        className="absolute flex h-[30px] items-center rounded-[6px] bg-[#0e0f1114] transition-all duration-300 ease-out dark:bg-[#ffffff1a]"
-        style={{
-          ...hoverStyle,
-          opacity: hoveredIndex !== null ? 1 : 0,
-        }}
-      />
-
-      {/* Active Indicator */}
-      <div
-        className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] transition-all duration-300 ease-out dark:bg-white"
-        style={activeStyle}
-      />
-
-      {/* Tabs */}
-      <div className="relative flex items-center justify-center space-x-[6px]">
-        {tabs.map((tab, index) => (
-          <Link
-            key={index}
-            href={`/dashboard/${tab.slug.toLowerCase()}`}
-            ref={(el) => {
-              if (el) {
-                tabRefs.current[index] = el;
-              }
-            }}
-            className={`h-[30px] cursor-pointer px-3 py-2 transition-colors duration-300 ${
-              index === activeIndex
-                ? "text-[#0e0e10] dark:text-white"
-                : "text-[#0e0f1199] dark:text-[#ffffff99]"
-            }`}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            onClick={() => setActiveIndex(index)}
-          >
-            <div className="flex h-full items-center justify-center text-sm leading-5 font-[var(--www-mattmannucci-me-geist-regular-font-family)] whitespace-nowrap">
-              {tab.name}
-            </div>
-          </Link>
-        ))}
+    <div className="sticky top-20 z-[9] bg-white p-4 pt-2 shadow-sm md:p-4">
+      <div className="scrollbar-hide w-full overflow-x-auto pb-1.5">
+        <div className="relative container mx-auto flex w-fit items-center">
+          {tabs.map((tab, index) => (
+            <TabItem
+              key={tab.name}
+              tab={tab}
+              isActive={index === activeIndex}
+              onClick={() => setActiveIndex(index)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+const TabItem = ({
+  tab,
+  isActive,
+  onClick,
+}: {
+  tab: Tab;
+  isActive: boolean;
+  onClick: () => void;
+}) => {
+  return (
+    <Link
+      key={tab.name}
+      href={`/dashboard/${tab.slug.toLowerCase()}`}
+      className={`group relative h-[30px] cursor-pointer px-3 py-2 transition-all duration-300 ${
+        isActive
+          ? "text-foreground dark:text-white"
+          : "text-[#0e0f1199] dark:text-[#ffffff99]"
+      }`}
+      onClick={onClick}
+    >
+      <span className="flex h-full items-center justify-center text-sm">
+        {tab.name}
+      </span>
+
+      {isActive && (
+        <motion.span
+          id="tab-indicator"
+          layoutId="tab-indicator"
+          className="absolute inset-x-0 bottom-[-6px] z-10 h-[2px] w-full bg-[#0e0f11] dark:bg-white"
+        />
+      )}
+      <span className="absolute inset-0 z-10 rounded-lg bg-[#0e0f1114] opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100 dark:bg-white" />
+    </Link>
+  );
+};
