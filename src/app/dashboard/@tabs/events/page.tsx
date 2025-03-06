@@ -1,4 +1,9 @@
+import EventForm from "./_ui/event-form";
+
 export default async function Page() {
-  // await sleep(3000);
-  return <div>Create Views Event Page</div>;
+  return (
+    <div className="w-full">
+      <EventForm />
+    </div>
+  );
 }
