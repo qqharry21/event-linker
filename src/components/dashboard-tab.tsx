@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Tab = {
   name: string;
@@ -26,6 +26,12 @@ export default function DashboardTab() {
 
   const [activeIndex, setActiveIndex] = useState(targetIndex);
 
+  useEffect(() => {
+    console.log("render tab");
+
+    setActiveIndex(targetIndex);
+  }, [targetIndex]);
+
   return (
     <div className="sticky top-0 flex h-full w-full bg-white p-4 md:w-64 md:p-4">
       <div className="scrollbar-hide w-full overflow-x-auto max-md:pb-1.5">
@@ -35,7 +41,6 @@ export default function DashboardTab() {
               key={tab.name}
               tab={tab}
               isActive={index === activeIndex}
-              onClick={() => setActiveIndex(index)}
             />
           ))}
         </div>
@@ -44,15 +49,7 @@ export default function DashboardTab() {
   );
 }
 
-const TabItem = ({
-  tab,
-  isActive,
-  onClick,
-}: {
-  tab: Tab;
-  isActive: boolean;
-  onClick: () => void;
-}) => {
+const TabItem = ({ tab, isActive }: { tab: Tab; isActive: boolean }) => {
   return (
     <Link
       key={tab.name}
@@ -62,7 +59,6 @@ const TabItem = ({
           ? "text-foreground dark:text-white"
           : "text-muted-foreground dark:text-[#ffffff99]"
       }`}
-      onClick={onClick}
     >
       {tab.name}
 

@@ -1,8 +1,12 @@
 import DashboardTab from "@/components/dashboard-tab";
+import type { Metadata } from "next";
 
-const title = "Dashboard";
+const title = {
+  template: "%s | Event Linker",
+  default: "Dashboard",
+};
 
-export const metadata = {
+export const metadata: Metadata = {
   title,
   openGraph: {
     title,

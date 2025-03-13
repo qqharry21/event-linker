@@ -5,6 +5,7 @@ import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { createEvent } from "@/app/actions/event";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -33,19 +34,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { redirect } from "next/navigation";
+import { toast } from "sonner";
 
 // Define the form schema with zod
 const formSchema = z.object({
   title: z.string().min(2, {
     message: "Title must be at least 2 characters.",
   }),
-  description: z.string().optional(),
+  description: z.string(),
   startTime: z.date({
     required_error: "Start time is required.",
   }),
   includeEndTime: z.boolean().default(false),
-  endTime: z.date().optional(),
-  location: z.string().optional(),
+  endTime: z.date().nullable(),
+  location: z.string(),
   hideParticipants: z.boolean().default(false),
 });
 
@@ -60,27 +63,43 @@ export default function EventForm() {
       description: "",
       includeEndTime: false,
       hideParticipants: false,
+      startTime: new Date(),
+      endTime: null,
       location: "",
     },
   });
 
   // Watch the includeEndTime field to conditionally render the endTime field
+  const startTime = form.watch("startTime");
   const includeEndTime = form.watch("includeEndTime");
 
   // Form submission handler
-  function onSubmit(data: FormValues) {
+  async function onSubmit(data: FormValues) {
     // If includeEndTime is false, remove endTime from the data
     if (!data.includeEndTime) {
-      data.endTime = undefined;
+      data.endTime = null;
     }
     console.log(data);
     // Handle form submission logic here
+    const res = await createEvent(data);
+    console.log("🚨 - res", res);
+    if (res.status === 201) {
+      form.reset(
+        {},
+        {
+          keepDefaultValues: true,
+          keepDirty: false,
+        },
+      );
+      toast(res.message);
+      redirect("/dashboard");
+    } else toast(res.message);
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Event</CardTitle>
+        <CardTitle className="text-2xl">Create Event</CardTitle>
         <CardDescription>
           Fill in the details to create a new event.
         </CardDescription>
@@ -96,7 +115,11 @@ export default function EventForm() {
                 <FormItem>
                   <FormLabel>Event Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Tim's birthday..." {...field} />
+                    <Input
+                      placeholder="Ex: Tim's birthday..."
+                      disabled={form.formState.isSubmitting}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,6 +137,7 @@ export default function EventForm() {
                     <Textarea
                       placeholder="Provide details about the event"
                       className="min-h-[100px]"
+                      disabled={form.formState.isSubmitting}
                       {...field}
                     />
                   </FormControl>
@@ -122,14 +146,58 @@ export default function EventForm() {
               )}
             />
 
-            <div className="flex w-full items-center gap-4 max-md:flex-col">
-              {/* Start Time Field */}
+            {/* Start Time Field */}
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem className="flex w-full flex-col">
+                  <FormLabel>Start Time</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                          disabled={form.formState.isSubmitting}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Select date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* End Time Field - Conditionally rendered */}
+            {includeEndTime && (
               <FormField
                 control={form.control}
-                name="startTime"
+                name="endTime"
                 render={({ field }) => (
                   <FormItem className="flex w-full flex-col">
-                    <FormLabel>Start Time</FormLabel>
+                    <FormLabel>End Time</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -139,6 +207,7 @@ export default function EventForm() {
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground",
                             )}
+                            disabled={form.formState.isSubmitting}
                           >
                             {field.value ? (
                               format(field.value, "PPP")
@@ -152,11 +221,12 @@ export default function EventForm() {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value}
+                          selected={field.value || new Date()}
                           onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                          }
+                          disabled={(date) => {
+                            const startTime = form.getValues("startTime");
+                            return startTime && date < startTime;
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -165,53 +235,7 @@ export default function EventForm() {
                   </FormItem>
                 )}
               />
-
-              {/* End Time Field - Conditionally rendered */}
-              {includeEndTime && (
-                <FormField
-                  control={form.control}
-                  name="endTime"
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col">
-                      <FormLabel>End Time</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => {
-                              const startTime = form.getValues("startTime");
-                              return startTime && date < startTime;
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
+            )}
 
             {/* Include End Time Toggle */}
             <FormField
@@ -233,8 +257,14 @@ export default function EventForm() {
                   <FormControl>
                     <Switch
                       id="includeEndTime"
+                      disabled={form.formState.isSubmitting}
                       checked={field.value}
-                      onCheckedChange={field.onChange}
+                      onCheckedChange={(val) => {
+                        field.onChange(val);
+                        if (val === true) {
+                          form.setValue("endTime", startTime);
+                        }
+                      }}
                     />
                   </FormControl>
                 </label>
@@ -249,7 +279,11 @@ export default function EventForm() {
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="Event location" {...field} />
+                    <Input
+                      placeholder="Event location"
+                      disabled={form.formState.isSubmitting}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -276,6 +310,7 @@ export default function EventForm() {
                   <FormControl>
                     <Switch
                       id="hideParticipants"
+                      disabled={form.formState.isSubmitting}
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
@@ -285,8 +320,12 @@ export default function EventForm() {
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="mt-4 w-full">
-              Create Event
+            <Button
+              type="submit"
+              className="mt-4 w-full cursor-pointer"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Loading..." : "Create Event"}
             </Button>
           </CardFooter>
         </form>
