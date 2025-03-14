@@ -33,17 +33,11 @@ export default function DashboardTab() {
   }, [targetIndex]);
 
   return (
-    <div className="border-secondary flex h-full w-full bg-white p-4 max-md:border-b md:sticky md:top-20 md:w-64">
-      <div className="scrollbar-hide w-full overflow-x-auto max-md:pb-1.5">
-        <div className="relative flex w-full items-center md:flex-col">
-          {tabs.map((tab, index) => (
-            <TabItem
-              key={tab.name}
-              tab={tab}
-              isActive={index === activeIndex}
-            />
-          ))}
-        </div>
+    <div className="scrollbar-hide w-full overflow-x-auto max-md:pb-1.5 md:flex-1">
+      <div className="relative flex w-full items-center md:flex-col">
+        {tabs.map((tab, index) => (
+          <TabItem key={tab.name} tab={tab} isActive={index === activeIndex} />
+        ))}
       </div>
     </div>
   );

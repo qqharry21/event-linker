@@ -1,14 +1,24 @@
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { Metadata } from "next";
-import EventForm from "./_ui/event-form";
+import { redirect } from "next/navigation";
+import { EventsOverview } from "./_ui/events-overview";
 
 export const metadata: Metadata = {
-  title: "Create Event",
+  title: "Events Overview",
 };
 
 export default async function Page() {
-  return (
-    <div className="w-full">
-      <EventForm />
-    </div>
-  );
+  const { userId } = await auth();
+  console.log("🚨 - userId", userId);
+
+  if (!userId) {
+    redirect("/");
+  }
+
+  const events = await prisma.event.findMany({});
+
+  if (!events || events.length === 0) return <div>Empty</div>;
+
+  return <EventsOverview events={events} />;
 }
