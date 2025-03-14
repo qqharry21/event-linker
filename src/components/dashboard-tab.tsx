@@ -11,8 +11,8 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
-  { name: "Overview", slug: "" },
-  { name: "Events", slug: "events" },
+  { name: "Dashboard", slug: "" },
+  { name: "Events Overview", slug: "events" },
   { name: "History", slug: "history" },
   { name: "Profile", slug: "profile" },
 ];
@@ -33,7 +33,7 @@ export default function DashboardTab() {
   }, [targetIndex]);
 
   return (
-    <div className="sticky top-0 flex h-full w-full bg-white p-4 md:w-64 md:p-4">
+    <div className="border-secondary flex h-full w-full bg-white p-4 max-md:border-b md:sticky md:top-20 md:w-64">
       <div className="scrollbar-hide w-full overflow-x-auto max-md:pb-1.5">
         <div className="relative flex w-full items-center md:flex-col">
           {tabs.map((tab, index) => (
@@ -54,7 +54,7 @@ const TabItem = ({ tab, isActive }: { tab: Tab; isActive: boolean }) => {
     <Link
       key={tab.name}
       href={`/dashboard/${tab.slug.toLowerCase()}`}
-      className={`group relative flex h-[30px] w-full cursor-pointer items-center justify-center px-6 py-2 text-sm transition-all duration-300 md:justify-start ${
+      className={`group relative flex h-[30px] w-full cursor-pointer items-center justify-center px-6 py-2 text-sm whitespace-nowrap transition-all duration-300 md:justify-start ${
         isActive
           ? "text-foreground dark:text-white"
           : "text-muted-foreground dark:text-[#ffffff99]"

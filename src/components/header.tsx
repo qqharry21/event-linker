@@ -56,8 +56,8 @@ export const Header = () => {
   }, [segment]);
 
   return (
-    <header className="bg-background sticky top-0 z-10 w-full px-4 shadow-sm md:px-6">
-      <div className="container mx-auto flex h-20 items-center">
+    <header className="bg-background sticky top-0 z-20 w-full px-4 shadow-sm md:px-6">
+      <div className="container mx-auto flex h-16 items-center md:h-20">
         <Link href="/" className="mr-6" prefetch={false}>
           <PartyPopperIcon />
           <span className="sr-only">Event Linker</span>

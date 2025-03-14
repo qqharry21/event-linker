@@ -1,12 +1,8 @@
 import DashboardTab from "@/components/dashboard-tab";
-import type { Metadata } from "next";
 
-const title = {
-  template: "%s | Event Linker",
-  default: "Dashboard",
-};
+const title = "Dashboard";
 
-export const metadata: Metadata = {
+export const metadata = {
   title,
   openGraph: {
     title,
@@ -15,9 +11,10 @@ export const metadata: Metadata = {
 
 export default function Layout({ tabs }: { tabs: React.ReactNode }) {
   return (
-    <div className="container mx-auto h-full min-h-[calc(100dvh-80px)] overflow-hidden md:flex">
+    <div className="container mx-auto md:flex">
       <DashboardTab />
-      <main className="border-secondary w-full flex-1 border-l p-4 pt-0 md:p-6">
+
+      <main className="border-secondary w-full p-4 md:flex-1 md:border-l">
         {tabs}
       </main>
     </div>
