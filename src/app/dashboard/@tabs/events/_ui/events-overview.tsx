@@ -26,11 +26,10 @@ export const EventsOverview = ({ events }: { events: Types.Event[] }) => {
         const matchesDateRange =
           !dateRange.from ||
           !dateRange.to ||
-          (event.startTime >= dateRange.from &&
-            event.startTime <= dateRange.to);
+          (event.date >= dateRange.from && event.date <= dateRange.to);
 
         const today = new Date();
-        const isPastEvent = event.startTime < today;
+        const isPastEvent = event.date < today;
         const matchesStatus =
           eventStatus === EventStatus.ALL ||
           (eventStatus === EventStatus.PAST && isPastEvent) ||
@@ -42,7 +41,7 @@ export const EventsOverview = ({ events }: { events: Types.Event[] }) => {
   );
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="@container flex h-full flex-col">
       <div className="flex flex-col space-y-4 p-4 sm:p-6 lg:p-8">
         <EventsHeader />
 

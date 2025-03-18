@@ -10,15 +10,18 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const { userId } = await auth();
-  console.log("🚨 - userId", userId);
 
   if (!userId) {
     redirect("/");
   }
 
-  const events = await prisma.event.findMany({});
+  const events = await prisma.event.findMany({
+    orderBy: {
+      startTime: "desc",
+    },
+  });
 
-  if (!events || events.length === 0) return <div>Empty</div>;
+  if (!events) return <div>Something went wrong</div>;
 
   return <EventsOverview events={events} />;
 }

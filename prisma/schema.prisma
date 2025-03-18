@@ -20,9 +20,10 @@ model Event {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId
   title            String
   description      String?
-  startTime        DateTime
-  endTime          DateTime?
-  includeEndTime   Boolean
+  date             DateTime
+  endDate          DateTime?
+  startTime        String?
+  endTime          String?
   location         String
   background       String?
   hideParticipants Boolean

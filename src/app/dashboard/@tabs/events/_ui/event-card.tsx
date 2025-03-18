@@ -18,7 +18,7 @@ interface EventCardProps {
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const isPastEvent = event.startTime < new Date();
+  const isPastEvent = event.date < new Date();
 
   return (
     <Card className="flex h-full flex-col overflow-hidden">
@@ -31,7 +31,7 @@ export function EventCard({ event }: EventCardProps) {
         </div>
         <CardDescription className="mt-1 flex items-center">
           <CalendarDays className="mr-1 h-4 w-4" />
-          {format(event.startTime, "EEEE, MMMM d, yyyy")}
+          {format(event.date, "EEEE, MMMM d, yyyy")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
@@ -86,7 +86,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between border-t pt-3">
+      <CardFooter className="flex justify-between border-t pt-6">
         <Button variant="outline" size="sm">
           View Details
         </Button>

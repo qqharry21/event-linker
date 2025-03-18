@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { toast } from "sonner";
+import { TimePicker } from "./ui/time-picker";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -35,11 +36,13 @@ const formSchema = z.object({
     message: "Title must be at least 2 characters.",
   }),
   description: z.string(),
-  startTime: z.date({
-    required_error: "Start time is required.",
+  date: z.date({
+    required_error: "Start date is required.",
   }),
-  includeEndTime: z.boolean().default(false),
-  endTime: z.date().nullable(),
+  endDate: z.date().nullable(),
+  isFullDayEvent: z.boolean().default(false),
+  startTime: z.string().nullable(),
+  endTime: z.string().nullable(),
   location: z.string(),
   hideParticipants: z.boolean().default(false),
 });
@@ -53,22 +56,22 @@ export default function EventForm() {
     defaultValues: {
       title: "",
       description: "",
-      includeEndTime: false,
+      isFullDayEvent: false,
       hideParticipants: false,
-      startTime: new Date(),
+      date: new Date(),
       endTime: null,
       location: "",
     },
   });
 
-  // Watch the includeEndTime field to conditionally render the endTime field
+  // Watch the isFullDayEvent field to conditionally render the endTime field
   const startTime = form.watch("startTime");
-  const includeEndTime = form.watch("includeEndTime");
+  const isFullDayEvent = form.watch("isFullDayEvent");
 
   // Form submission handler
   async function onSubmit(data: FormValues) {
-    // If includeEndTime is false, remove endTime from the data
-    if (!data.includeEndTime) {
+    // If isFullDayEvent is false, remove endTime from the data
+    if (!data.isFullDayEvent) {
       data.endTime = null;
     }
     console.log(data);
@@ -90,13 +93,16 @@ export default function EventForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="grid gap-4 md:grid-cols-2"
+      >
         {/* Title Field */}
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="col-span-full">
               <FormLabel>Event Title</FormLabel>
               <FormControl>
                 <Input
@@ -115,7 +121,7 @@ export default function EventForm() {
           control={form.control}
           name="description"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="col-span-full">
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
@@ -130,13 +136,13 @@ export default function EventForm() {
           )}
         />
 
-        {/* Start Time Field */}
+        {/* Start Date Field */}
         <FormField
           control={form.control}
-          name="startTime"
+          name="date"
           render={({ field }) => (
             <FormItem className="flex w-full flex-col">
-              <FormLabel>Start Time</FormLabel>
+              <FormLabel>Start Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -173,74 +179,69 @@ export default function EventForm() {
             </FormItem>
           )}
         />
-
-        {/* End Time Field - Conditionally rendered */}
-        {includeEndTime && (
-          <FormField
-            control={form.control}
-            name="endTime"
-            render={({ field }) => (
-              <FormItem className="flex w-full flex-col">
-                <FormLabel>End Time</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                        disabled={form.formState.isSubmitting}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Select date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value || new Date()}
-                      onSelect={field.onChange}
-                      disabled={(date) => {
-                        const startTime = form.getValues("startTime");
-                        return startTime && date < startTime;
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="endDate"
+          render={({ field }) => (
+            <FormItem className="flex w-full flex-col">
+              <FormLabel>End Date (Optional)</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground",
+                      )}
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Select date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value || form.watch("date")}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Include End Time Toggle */}
         <FormField
           control={form.control}
-          name="includeEndTime"
+          name="isFullDayEvent"
           render={({ field }) => (
             <label
-              className="flex flex-row items-center justify-between rounded-lg border p-3 text-left"
-              htmlFor="includeEndTime"
+              className="col-span-full flex flex-row items-center justify-between rounded-lg border p-3 text-left"
+              htmlFor="isFullDayEvent"
             >
               <div className="space-y-0.5">
                 <span className="text-sm leading-none font-medium select-none">
-                  Include End Time
+                  Full Day Event
                 </span>
                 <FormDescription>
-                  Toggle to add an end time for your event
+                  Check this box if this is a full day event (no specific time)
                 </FormDescription>
               </div>
               <FormControl>
                 <Switch
-                  id="includeEndTime"
+                  id="isFullDayEvent"
                   disabled={form.formState.isSubmitting}
                   checked={field.value}
                   onCheckedChange={(val) => {
@@ -255,12 +256,54 @@ export default function EventForm() {
           )}
         />
 
+        {/* Start Time/End Time Field - Conditionally rendered */}
+        {isFullDayEvent && (
+          <>
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <FormControl>
+                    <TimePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Select start time"
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="endTime"
+              render={({ field }) => (
+                <FormItem className="flex w-full flex-col">
+                  <FormLabel>End Time</FormLabel>
+                  <FormControl>
+                    <TimePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Select end time"
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
         {/* Location Field */}
         <FormField
           control={form.control}
           name="location"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="col-span-full">
               <FormLabel>Location</FormLabel>
               <FormControl>
                 <Input
@@ -280,7 +323,7 @@ export default function EventForm() {
           name="hideParticipants"
           render={({ field }) => (
             <label
-              className="flex flex-row items-center justify-between rounded-lg border p-3 text-left"
+              className="col-span-full flex flex-row items-center justify-between rounded-lg border p-3 text-left"
               htmlFor="hideParticipants"
             >
               <div className="space-y-0.5">
@@ -305,7 +348,7 @@ export default function EventForm() {
 
         <Button
           type="submit"
-          className="w-full cursor-pointer"
+          className="col-span-full w-full cursor-pointer"
           disabled={form.formState.isSubmitting}
         >
           {form.formState.isSubmitting ? "Loading..." : "Create"}

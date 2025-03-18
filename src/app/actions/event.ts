@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { sleep } from "@/lib/utils";
 import { Types } from "@/types/global";
 import { auth } from "@clerk/nextjs/server";
 import { revalidateTag } from "next/cache";
@@ -13,7 +12,6 @@ type CreateEvent = Omit<
 
 export async function createEvent(formData: CreateEvent) {
   try {
-    await sleep(5000);
     const { userId } = await auth();
 
     if (!userId) {

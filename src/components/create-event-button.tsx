@@ -9,6 +9,7 @@ import {
 import { PlusIcon } from "lucide-react";
 import EventForm from "./event-form";
 import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
 
 export const CreateEventButton = () => {
   return (
@@ -29,8 +30,8 @@ export const CreateEventButton = () => {
             Fill in the details to create a new event.
           </DialogDescription>
         </DialogHeader>
-        <div className="bg-primary/20 h-px w-full"></div>
-        <div className="scrollbar-hide max-h-[500px] overflow-auto">
+        <Separator />
+        <div className="scrollbar-hide overflow-auto px-1 max-md:max-h-[500px]">
           <EventForm />
         </div>
       </DialogContent>
