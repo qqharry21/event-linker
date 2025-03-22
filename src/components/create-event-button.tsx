@@ -1,3 +1,8 @@
+"use client";
+
+import { PlusIcon } from "lucide-react";
+import { useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -6,14 +11,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "lucide-react";
 import EventForm from "./event-form";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-
 export const CreateEventButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="default"
@@ -32,7 +36,7 @@ export const CreateEventButton = () => {
         </DialogHeader>
         <Separator />
         <div className="scrollbar-hide overflow-auto px-1 max-md:max-h-[500px]">
-          <EventForm />
+          <EventForm onClose={() => setIsOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

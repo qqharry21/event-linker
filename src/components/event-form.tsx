@@ -26,30 +26,43 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { redirect } from "next/navigation";
 import { toast } from "sonner";
 import { TimePicker } from "./ui/time-picker";
 
 // Define the form schema with zod
-const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
-  }),
-  description: z.string(),
-  date: z.date({
-    required_error: "Start date is required.",
-  }),
-  endDate: z.date().nullable(),
-  isFullDayEvent: z.boolean().default(false),
-  startTime: z.string().nullable(),
-  endTime: z.string().nullable(),
-  location: z.string(),
-  hideParticipants: z.boolean().default(false),
-});
+const formSchema = z
+  .object({
+    title: z.string().min(2, {
+      message: "Title must be at least 2 characters.",
+    }),
+    description: z.string(),
+    date: z.date({
+      required_error: "Start date is required.",
+    }),
+    endDate: z.date().nullable(),
+    isFullDayEvent: z.boolean().default(false),
+    startTime: z.string().nullable(),
+    endTime: z.string().nullable(),
+    location: z.string(),
+    hideParticipants: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      if (data.isFullDayEvent) {
+        return data.startTime === null;
+      } else {
+        return typeof data.startTime === "string";
+      }
+    },
+    {
+      message: "Start time must be provided for non-full day events",
+      path: ["startTime"],
+    },
+  );
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function EventForm() {
+export default function EventForm({ onClose }: { onClose: () => void }) {
   // Initialize the form with react-hook-form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,9 +71,11 @@ export default function EventForm() {
       description: "",
       isFullDayEvent: false,
       hideParticipants: false,
-      date: new Date(),
-      endTime: null,
       location: "",
+      date: new Date(),
+      endDate: null,
+      startTime: null,
+      endTime: null,
     },
   });
 
@@ -69,15 +84,16 @@ export default function EventForm() {
   const isFullDayEvent = form.watch("isFullDayEvent");
 
   // Form submission handler
-  async function onSubmit(data: FormValues) {
-    // If isFullDayEvent is false, remove endTime from the data
-    if (!data.isFullDayEvent) {
+  async function onSubmit({ isFullDayEvent, ...data }: FormValues) {
+    // If isFullDayEvent is false, remove startTIme and endTime from the data
+    if (!isFullDayEvent) {
+      data.startTime = null;
       data.endTime = null;
     }
     console.log(data);
     // Handle form submission logic here
     const res = await createEvent(data);
-    console.log("🚨 - res", res);
+
     if (res.status === 201) {
       form.reset(
         {},
@@ -87,7 +103,7 @@ export default function EventForm() {
         },
       );
       toast(res.message);
-      redirect("/dashboard");
+      onClose();
     } else toast(res.message);
   }
 
@@ -257,7 +273,7 @@ export default function EventForm() {
         />
 
         {/* Start Time/End Time Field - Conditionally rendered */}
-        {isFullDayEvent && (
+        {!isFullDayEvent && (
           <>
             <FormField
               control={form.control}
@@ -282,7 +298,7 @@ export default function EventForm() {
               name="endTime"
               render={({ field }) => (
                 <FormItem className="flex w-full flex-col">
-                  <FormLabel>End Time</FormLabel>
+                  <FormLabel>End Time (Optional)</FormLabel>
                   <FormControl>
                     <TimePicker
                       value={field.value ?? ""}
