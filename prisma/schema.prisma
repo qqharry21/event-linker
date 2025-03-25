@@ -12,8 +12,8 @@ model User {
   displayName String?
   avatarUrl   String?
 
-  Event Event[]
-  RSVP  RSVP[]
+  createdEvents Event[]              @relation("CreatedEvents")
+  participation EventParticipation[]
 }
 
 model Event {
@@ -26,31 +26,37 @@ model Event {
   endTime          String?
   location         String
   background       String?
-  hideParticipants Boolean
+  hideParticipants Boolean   @default(false)
   createdById      String
-  createdBy        User      @relation(fields: [createdById], references: [id])
+  createdBy        User      @relation("CreatedEvents", fields: [createdById], references: [id])
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  rsvps RSVP[] // One-to-many relationship
+  participation EventParticipation[]
+
+  @@index([createdById])
 }
 
-enum RSVP_STATUS {
+enum ParticipationStatus {
+  PENDING
   ACCEPTED
   DECLINED
-  PENDING
 }
 
-model RSVP {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  eventId   String      @db.ObjectId
-  event     Event       @relation(fields: [eventId], references: [id])
+model EventParticipation {
+  id        String              @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String              @db.ObjectId
+  event     Event               @relation(fields: [eventId], references: [id])
   userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  status    RSVP_STATUS
+  user      User                @relation(fields: [userId], references: [id])
+  status    ParticipationStatus @default(PENDING)
   comment   String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }
 
 model ActivityLog {

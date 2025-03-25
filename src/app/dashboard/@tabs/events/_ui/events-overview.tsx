@@ -37,7 +37,7 @@ export const EventsOverview = ({ events }: { events: Types.Event[] }) => {
 
         return matchesSearch && matchesDateRange && matchesStatus;
       }),
-    [],
+    [events],
   );
 
   return (

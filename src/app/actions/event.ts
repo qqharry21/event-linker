@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { Types } from "@/types/global";
 import { auth } from "@clerk/nextjs/server";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
 type CreateEvent = Omit<
   Types.Event,
@@ -27,7 +27,7 @@ export async function createEvent(formData: CreateEvent) {
       },
     });
 
-    revalidateTag("event");
+    revalidatePath("/dashboard/events");
 
     console.log("create Success", data);
 
