@@ -11,8 +11,26 @@ export const metadata: Metadata = {
 
 export const revalidate = 0;
 
-const getEvents = cache(async () => {
+const getEvents = cache(async (userId: string) => {
   const events = await prisma.event.findMany({
+    where: {
+      OR: [
+        { createdById: userId },
+        {
+          participation: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      participation: {
+        include: { user: true },
+      },
+      createdBy: true,
+    },
     orderBy: {
       startTime: "desc",
     },
@@ -29,7 +47,7 @@ export default async function Page() {
     redirect("/");
   }
 
-  const events = await getEvents();
+  const events = await getEvents(userId);
 
   if (!events) return <div>Something went wrong</div>;
 
