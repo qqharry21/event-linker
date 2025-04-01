@@ -421,7 +421,7 @@ export function EventCard({ event }: EventCardProps) {
             </div>
 
             <DialogFooter>
-              {isCreator && (
+              {isCreator && !isPastEvent && (
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
