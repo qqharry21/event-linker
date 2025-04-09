@@ -87,8 +87,8 @@ export function EventDetail({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="bg-card/50 mx-auto max-w-2xl overflow-hidden shadow-xl backdrop-blur-sm">
+    <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-8">
+      <Card className="bg-card/50 mx-auto h-full w-full max-w-2xl overflow-hidden shadow-xl backdrop-blur-sm">
         <div className="relative">
           {event.background && (
             <div
@@ -147,19 +147,19 @@ export function EventDetail({
                 <TooltipProvider>
                   {acceptedParticipants.map((participant) => (
                     <Tooltip key={participant.userId}>
-                      <TooltipTrigger>
+                      <TooltipTrigger className="-translate-x-4 first:translate-x-0">
                         <Avatar className="ring-primary h-8 w-8 ring-2 ring-offset-2">
                           <AvatarImage
-                            src={participant.user.avatarUrl || ""}
-                            alt={participant.user.displayName || ""}
+                            src={participant.user.avatarUrl ?? ""}
+                            alt={participant.user.displayName ?? ""}
                           />
                           <AvatarFallback>
-                            {participant.user.displayName?.[0] || "U"}
+                            {participant.user.displayName?.[0] ?? "U"}
                           </AvatarFallback>
                         </Avatar>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>{participant.user.displayName || "Anonymous"}</p>
+                        <p>{participant.user.displayName ?? "Anonymous"}</p>
                         {participant.comment && (
                           <p className="text-muted-foreground text-xs">
                             &quot;{participant.comment}&quot;
@@ -174,7 +174,7 @@ export function EventDetail({
           </div>
 
           {currentUserId && !isPreview && !isCreator && (
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4">
               <Textarea
                 placeholder="請填寫您的回覆訊息（選填）"
                 value={comment}
@@ -208,9 +208,10 @@ export function EventDetail({
             </div>
           )}
         </CardContent>
-        <CardFooter className="text-muted-foreground border-t text-center text-sm">
-          <p className="w-full py-4">
-            活動發起人：{event.createdBy.displayName || "Anonymous"}
+
+        <CardFooter className="text-muted-foreground text-center text-sm">
+          <p className="w-full">
+            活動發起人：{event.createdBy.displayName ?? "Anonymous"}
           </p>
         </CardFooter>
       </Card>

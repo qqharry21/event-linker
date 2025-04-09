@@ -47,7 +47,7 @@ const TabItem = ({ tab, isActive }: { tab: Tab; isActive: boolean }) => {
   return (
     <Link
       key={tab.name}
-      href={`/dashboard/${tab.slug.toLowerCase()}`}
+      href={`/${tab.slug.toLowerCase()}`}
       className={`group relative flex h-[30px] w-full cursor-pointer items-center justify-center px-6 py-2 text-sm whitespace-nowrap transition-all duration-300 md:justify-start ${
         isActive
           ? "text-foreground dark:text-white"

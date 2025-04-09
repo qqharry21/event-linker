@@ -90,7 +90,7 @@ export function EventCard({ event }: EventCardProps) {
   const hasAccepted = participation?.status === "ACCEPTED";
 
   const handleEditEvent = () => {
-    router.push(`/dashboard/events/${event.id}/edit`);
+    router.push(`/events/${event.id}/edit`);
   };
 
   const handleArchiveEvent = async () => {

@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 export async function joinEvent(
   eventId: string,
   status: Types.ParticipationStatus = "PENDING",
+  comment: string = "",
 ) {
   try {
     const { userId } = await auth();
@@ -26,15 +27,26 @@ export async function joinEvent(
       throw new Error("Event not found");
     }
 
-    const participation = await prisma.eventParticipation.create({
-      data: {
+    const participation = await prisma.eventParticipation.upsert({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId,
+        },
+      },
+      update: {
+        status,
+        comment,
+      },
+      create: {
         eventId,
         userId,
         status,
+        comment,
       },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     console.log("Successfully joined event", participation);
 
@@ -78,7 +90,7 @@ export async function removeParticipant(participationId: string) {
       where: { id: participationId },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     return {
       status: 200,
@@ -126,7 +138,7 @@ export async function updateParticipationStatus(
       },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     return {
       status: 200,

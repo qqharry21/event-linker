@@ -26,14 +26,7 @@ export default async function EventPage(props: { params: { id: string } }) {
   if (!event) {
     return notFound();
   }
-
-  // Check if the user is the creator
-  const isCreator = userId === event.createdById;
-
-  // If the user is not the creator and the event is not yet ready
-  if (!isCreator && !event.startTime) {
-    return notFound();
-  }
+  console.log("🚨 - event", event);
 
   return <EventDetail event={event} currentUserId={userId} />;
 }

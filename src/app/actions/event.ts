@@ -33,7 +33,7 @@ export async function createEvent(formData: CreateEvent) {
       },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     console.log("Successfully created event", data);
 
@@ -77,7 +77,7 @@ export async function updateEvent(eventId: string, data: UpdateEvent) {
       data,
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     return {
       status: 200,
@@ -120,7 +120,7 @@ export async function closeEvent(eventId: string) {
       },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     return {
       status: 200,
@@ -163,7 +163,7 @@ export async function archiveEvent(eventId: string) {
       },
     });
 
-    revalidatePath("/dashboard/events");
+    revalidatePath("/events");
 
     return {
       status: 200,
