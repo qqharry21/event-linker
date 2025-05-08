@@ -5,7 +5,7 @@ import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { createEvent } from "@/app/actions/event";
+import { createEvent } from "@/actions/event";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {

@@ -13,11 +13,11 @@ import {
   X,
 } from "lucide-react";
 
-import { archiveEvent, closeEvent } from "@/app/actions/event";
+import { archiveEvent, closeEvent } from "@/actions/event";
 import {
   removeParticipant,
   updateParticipationStatus,
-} from "@/app/actions/event-participation";
+} from "@/actions/event-participation";
 import {
   AlertDialog,
   AlertDialogAction,

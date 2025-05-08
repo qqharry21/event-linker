@@ -1,15 +1,15 @@
-import { EventDetail } from "@/components/EventDetail";
+import { EventDetail } from "@/components/event-detail";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 
-export default async function EventPreviewPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+type Params = Promise<{ id: string }>;
+
+export default async function EventPreviewPage({ params }: { params: Params }) {
+  const { id } = await params;
   const user = await currentUser();
   const userId = user?.id;
+  console.log("🚨 - userId", userId);
 
   if (!userId) {
     return notFound();
@@ -17,7 +17,7 @@ export default async function EventPreviewPage({
 
   const event = await prisma.event.findUnique({
     where: {
-      id: params.id,
+      id,
       createdById: userId,
     },
     include: {
