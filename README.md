@@ -58,10 +58,10 @@ ngrok http 3000
 如果你想要指定 ngrok 提供的子網域，可以這樣執行：
 
 ```bash
-ngrok http --domain=starfish-pleasing-actively.ngrok-free.app 3000
+ngrok http --domain=CUSTOM_DOMAIN 3000
 ```
 
-這樣外部就能直接用 `https://starfish-pleasing-actively.ngrok-free.app` 存取你的本地 Next.js 服務。
+這樣外部就能直接將 `CUSTOM_DOMAIN` 替換成你的網址，存取你的本地 Next.js 服務。
 
 ---
 
