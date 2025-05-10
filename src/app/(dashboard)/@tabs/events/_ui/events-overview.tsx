@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { DateRange } from "react-day-picker";
+import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import { EventStatus } from "../type";
 import { EventsFilters } from "./events-filters";
 import { EventsGrid } from "./events-grid";
@@ -12,12 +12,11 @@ export const EventsOverview = ({
 }: {
   events: (EventWithParticipation & EventWithCreator)[];
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
-  });
-  const [eventStatus, setEventStatus] = useState<EventStatus>(EventStatus.ALL);
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("searchQuery") ?? "";
+  const dateFrom = searchParams.get("from") ?? "";
+  const dateTo = searchParams.get("to") ?? "";
+  const status = searchParams.get("status") ?? "current";
 
   const filteredEvents = useMemo(
     () =>
@@ -27,20 +26,20 @@ export const EventsOverview = ({
           event.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesDateRange =
-          !dateRange.from ||
-          !dateRange.to ||
-          (event.date >= dateRange.from && event.date <= dateRange.to);
+          !dateFrom ||
+          !dateTo ||
+          (event.date >= new Date(dateFrom) && event.date <= new Date(dateTo));
 
         const today = new Date();
         const isPastEvent = event.date < today;
         const matchesStatus =
-          eventStatus === EventStatus.ALL ||
-          (eventStatus === EventStatus.PAST && isPastEvent) ||
-          (eventStatus === EventStatus.CURRENT && !isPastEvent);
+          status === "all" ||
+          (status === "past" && isPastEvent) ||
+          (status === "current" && !isPastEvent);
 
         return matchesSearch && matchesDateRange && matchesStatus;
       }),
-    [events],
+    [events, searchQuery, dateFrom, dateTo, status],
   );
 
   return (
@@ -49,12 +48,12 @@ export const EventsOverview = ({
         <EventsHeader />
 
         <EventsFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          eventStatus={eventStatus}
-          setEventStatus={setEventStatus}
+          search={searchQuery}
+          dateRange={{
+            from: dateFrom ? new Date(dateFrom) : undefined,
+            to: dateTo ? new Date(dateTo) : undefined,
+          }}
+          status={status as EventStatus}
         />
 
         <EventsGrid events={filteredEvents} />

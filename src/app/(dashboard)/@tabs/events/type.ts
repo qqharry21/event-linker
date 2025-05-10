@@ -12,13 +12,8 @@ export interface Event {
   participants: Participant[];
 }
 
-export interface DateRange {
-  from?: Date;
-  to?: Date;
-}
-
 export enum EventStatus {
-  ALL,
-  PAST,
-  CURRENT,
+  ALL = "all",
+  PAST = "past",
+  CURRENT = "current",
 }

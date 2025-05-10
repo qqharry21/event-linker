@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { archiveEvent, closeEvent } from "@/actions/event";
+import { archiveEvent } from "@/actions/event";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,7 +85,7 @@ function AttendeesList({
 }) {
   if (attendees.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground h-[100px] text-sm">
         No attendees yet, be the first to attend!
       </p>
     );
@@ -180,14 +180,12 @@ function EventActions({
   isLoading,
   eventId,
   handleArchiveEvent,
-  handleCloseEvent,
 }: {
   isOrganizer: boolean;
   isPastEvent: boolean;
   isLoading: boolean;
   eventId: string;
   handleArchiveEvent: () => void;
-  handleCloseEvent: () => void;
 }) {
   return isOrganizer ? (
     <DropdownMenu>
@@ -209,11 +207,6 @@ function EventActions({
         <DropdownMenuItem onClick={handleArchiveEvent} disabled={isLoading}>
           <ArchiveIcon />
           Archive
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleCloseEvent} disabled={isLoading}>
-          <XIcon />
-          Close
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -254,9 +247,10 @@ export function EventCard({
     hideParticipants,
     description,
   } = event;
-  console.log("🚨 - event", event);
+
   const link = `${process.env.NEXT_PUBLIC_BASE_URL}/event/${eventId}`;
   const isOrganizer = createdBy.id === user?.id;
+  const isArchived = event.archived;
   const isLocationLink = isValidUrl(location);
 
   const attendees = useMemo(
@@ -285,7 +279,6 @@ export function EventCard({
     successMsg: string,
     errorMsg: string,
   ) => {
-    if (isPastEvent) return;
     try {
       setIsLoading(true);
       const result = await action();
@@ -329,13 +322,6 @@ export function EventCard({
       "Failed to archive event",
     );
 
-  const handleCloseEvent = () =>
-    handleAsyncAction(
-      () => closeEvent(eventId),
-      "Event closed",
-      "Failed to close event",
-    );
-
   const handleRemoveParticipantConfirm = (participantId: string) =>
     handleAsyncAction(
       () => removeParticipant(participantId),
@@ -362,10 +348,10 @@ export function EventCard({
   return (
     <div className="flex flex-wrap items-stretch gap-6">
       <Card className="relative flex min-h-[400px] w-full flex-col overflow-hidden shadow-lg">
-        {isOrganizer && (
+        {isArchived && (
           <div className="absolute top-0 right-0 z-10 size-[100px]">
             <div className="bg-primary text-primary-foreground absolute top-[20px] -right-[42px] flex w-[150px] rotate-45 items-center justify-center py-1 text-center text-xs shadow-[0_2px_4px_rgba(0,_0,_0,_0.2)]">
-              Organizer
+              Archived
             </div>
           </div>
         )}
@@ -463,7 +449,6 @@ export function EventCard({
             isLoading={isLoading}
             eventId={eventId}
             handleArchiveEvent={handleArchiveEvent}
-            handleCloseEvent={handleCloseEvent}
           />
         </CardFooter>
       </Card>

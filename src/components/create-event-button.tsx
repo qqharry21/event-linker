@@ -11,20 +11,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import EventForm from "./event-form";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-export const CreateEventButton = () => {
+
+export const CreateEventButton = ({
+  isSidebar = true,
+  className,
+}: {
+  isSidebar?: boolean;
+  className?: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="default"
-          className="cursor-pointer max-md:fixed max-md:right-4 max-md:bottom-4 max-md:z-10 max-md:size-9 max-md:rounded-full max-md:p-0"
+          className={cn(
+            "cursor-pointer",
+            isSidebar &&
+              "max-md:fixed max-md:right-4 max-md:bottom-4 max-md:z-10 max-md:hidden max-md:size-9 max-md:rounded-full max-md:p-0",
+            className,
+          )}
         >
           <PlusIcon size={16} />
-          <span className="hidden md:inline-block">Create New Event</span>
+          <span className={cn(isSidebar && "max-md:hidden")}>
+            Create New Event
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent>

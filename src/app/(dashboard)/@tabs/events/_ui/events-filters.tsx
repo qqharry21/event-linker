@@ -1,8 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -18,29 +15,72 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatDate } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { EventStatus } from "../type";
 
 interface EventsFiltersProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  search: string;
   dateRange: DateRange;
-  setDateRange: (range: {
-    from: Date | undefined;
-    to: Date | undefined;
-  }) => void;
-  eventStatus: EventStatus;
-  setEventStatus: (status: EventStatus) => void;
+  status: EventStatus;
 }
 
 export function EventsFilters({
-  searchQuery,
-  setSearchQuery,
+  search,
   dateRange,
-  setDateRange,
-  eventStatus,
-  setEventStatus,
+  status,
 }: EventsFiltersProps) {
+  const [searchQuery, setSearchQuery] = useState(search);
+  const [selectedDateRange, setSelectedDateRange] =
+    useState<DateRange>(dateRange);
+  const [selectedStatus, setSelectedStatus] = useState<EventStatus>(status);
+
+  const debouncedSearch = useCallback((value: string) => {
+    const params = new URLSearchParams(window.location.search);
+    if (value === "") {
+      params.delete("searchQuery");
+    } else {
+      params.set("searchQuery", value);
+    }
+    window.history.pushState(null, "", `?${params.toString()}`);
+  }, []);
+
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    setSelectedDateRange(range);
+    const params = new URLSearchParams(window.location.search);
+    if (range.from) {
+      params.set("from", range.from.toISOString());
+    } else {
+      params.delete("from");
+    }
+    if (range.to) {
+      params.set("to", range.to.toISOString());
+    } else {
+      params.delete("to");
+    }
+    window.history.pushState(null, "", `?${params.toString()}`);
+  }, []);
+
+  const handleStatusChange = useCallback((val: EventStatus) => {
+    setSelectedStatus(val);
+    const params = new URLSearchParams(window.location.search);
+    if (val === EventStatus.CURRENT) {
+      params.delete("status");
+    } else {
+      params.set("status", val.toString());
+    }
+    window.history.pushState(null, "", `?${params.toString()}`);
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      debouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, debouncedSearch]);
+
   return (
     <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @3xl:grid-cols-3">
       <SearchInput
@@ -49,7 +89,6 @@ export function EventsFilters({
         onChange={(e) => setSearchQuery(e.target.value)}
         className="col-span-full @3xl:col-span-1"
       />
-
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -59,8 +98,8 @@ export function EventsFilters({
             <CalendarIcon className="mr-2 h-4 w-4" />
             {dateRange.from && dateRange.to ? (
               <>
-                {format(dateRange.from, "LLL dd, y")} -{" "}
-                {format(dateRange.to, "LLL dd, y")}
+                {formatDate(dateRange.from, "LLL dd, y")} -{" "}
+                {formatDate(dateRange.to, "LLL dd, y")}
               </>
             ) : (
               <span className="overflow-hidden">Select date range</span>
@@ -71,11 +110,11 @@ export function EventsFilters({
           <Calendar
             mode="range"
             selected={{
-              from: dateRange.from,
-              to: dateRange.to,
+              from: selectedDateRange.from,
+              to: selectedDateRange.to,
             }}
             onSelect={(range) =>
-              setDateRange({
+              handleDateRangeChange({
                 from: range?.from,
                 to: range?.to,
               })
@@ -86,17 +125,20 @@ export function EventsFilters({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setDateRange({ from: undefined, to: undefined })}
+              onClick={() =>
+                handleDateRangeChange({ from: undefined, to: undefined })
+              }
             >
               Clear
             </Button>
           </div>
         </PopoverContent>
       </Popover>
-
       <Select
-        value={eventStatus.toString()}
-        onValueChange={(val) => setEventStatus(val as unknown as EventStatus)}
+        value={selectedStatus.toString()}
+        onValueChange={(val) =>
+          handleStatusChange(val as unknown as EventStatus)
+        }
       >
         <SelectTrigger className="h-9 w-full select-none">
           <SelectValue placeholder="Event status" />

@@ -1,3 +1,4 @@
+import { CreateEventButton } from "@/components/create-event-button";
 import { Card } from "@/components/ui/card";
 import { EventCard } from "./event-card";
 
@@ -9,6 +10,7 @@ const EventsEmpty = () => {
         <p className="text-muted-foreground mt-1 text-sm">
           Try adjusting your search or filter criteria
         </p>
+        <CreateEventButton isSidebar={false} className="mt-4" />
       </div>
     </Card>
   );
