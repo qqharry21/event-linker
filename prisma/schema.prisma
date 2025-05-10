@@ -61,9 +61,11 @@ model EventParticipation {
 }
 
 model ActivityLog {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkUserId String
-  action      String
-  timestamp   DateTime @default(now())
-  metadata    Json
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  action    String
+  timestamp DateTime @default(now())
+  metadata  Json
+
+  @@index([userId])
 }

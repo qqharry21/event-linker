@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Types } from "@/types/global";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { saveActivityLog } from "./activity-log";
 
 export async function joinEvent(
   eventId: string,
@@ -44,6 +45,13 @@ export async function joinEvent(
         status,
         comment,
       },
+    });
+
+    await saveActivityLog("joinEvent", {
+      eventId,
+      userId,
+      status,
+      comment,
     });
 
     revalidatePath("/events");
@@ -88,6 +96,11 @@ export async function removeParticipant(participationId: string) {
 
     await prisma.eventParticipation.delete({
       where: { id: participationId },
+    });
+
+    await saveActivityLog("removeParticipant", {
+      eventId: participation.eventId,
+      userId: participation.userId,
     });
 
     revalidatePath("/events");
@@ -138,6 +151,12 @@ export async function updateParticipation(
         status,
         comment: status === "DECLINED" && comment ? comment : undefined,
       },
+    });
+
+    await saveActivityLog("updateParticipation", {
+      eventId,
+      status,
+      comment,
     });
 
     revalidatePath("/events");

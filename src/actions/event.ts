@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Types } from "@/types/global";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { saveActivityLog } from "./activity-log";
 
 type CreateEvent = Omit<
   Types.Event,
@@ -31,6 +32,11 @@ export async function createEvent(formData: CreateEvent) {
           ],
         },
       },
+    });
+
+    await saveActivityLog("createEvent", {
+      eventId: data.id,
+      title: data.title,
     });
 
     revalidatePath("/events");
@@ -77,6 +83,11 @@ export async function updateEvent(eventId: string, data: UpdateEvent) {
       data,
     });
 
+    await saveActivityLog("updateEvent", {
+      eventId,
+      title: updatedEvent.title,
+    });
+
     revalidatePath("/events");
 
     return {
@@ -116,6 +127,11 @@ export async function archiveEvent(eventId: string) {
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
       data: { archived: true },
+    });
+
+    await saveActivityLog("archiveEvent", {
+      eventId,
+      title: updatedEvent.title,
     });
 
     revalidatePath("/events");
