@@ -32,7 +32,6 @@ export default async function EventPage({ params }: { params: Params }) {
   if (!event) {
     return notFound();
   }
-  console.log("🚨 - event", event);
 
   return <InvitationCard event={event} userId={userId} />;
 }

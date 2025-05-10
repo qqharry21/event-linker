@@ -12,15 +12,13 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 
 const getEvents = cache(async (userId: string) => {
-  const events = await prisma.event.findMany({
+  return prisma.event.findMany({
     where: {
       OR: [
         { createdById: userId },
         {
           participation: {
-            some: {
-              userId: userId,
-            },
+            some: { userId },
           },
         },
       ],
@@ -31,20 +29,15 @@ const getEvents = cache(async (userId: string) => {
       },
       createdBy: true,
     },
-    orderBy: {
-      startTime: "desc",
-    },
+    orderBy: [{ date: "desc" }, { startTime: "desc" }, { createdAt: "desc" }],
   });
-  console.log("🚨 - events", events);
-
-  return events;
 });
 
 export default async function Page() {
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/");
+    redirect("/sign-in");
   }
 
   const events = await getEvents(userId);

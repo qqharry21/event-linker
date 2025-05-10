@@ -105,9 +105,10 @@ export async function removeParticipant(participationId: string) {
   }
 }
 
-export async function updateParticipationStatus(
+export async function updateParticipation(
   eventId: string,
   status: Types.ParticipationStatus,
+  comment?: string,
 ) {
   try {
     const { userId } = await auth();
@@ -135,6 +136,7 @@ export async function updateParticipationStatus(
       },
       data: {
         status,
+        comment: status === "DECLINED" && comment ? comment : undefined,
       },
     });
 

@@ -8,14 +8,15 @@ declare global {
     children: React.ReactNode | React.ReactNode[];
   }
 
-  interface Event extends Types.Event {
-    participation: {
-      user: {
-        id: string;
-        displayName: string;
-        avatarUrl?: string;
-      };
-      status: "PENDING" | "ACCEPTED" | "DECLINED";
-    }[];
+  interface ParticipationWithUser extends Types.EventParticipation {
+    user: Types.User;
+  }
+
+  interface EventWithParticipation extends Types.Event {
+    participation: ParticipationWithUser[];
+  }
+
+  interface EventWithCreator extends Types.Event {
+    createdBy: Types.User;
   }
 }

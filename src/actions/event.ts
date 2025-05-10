@@ -158,9 +158,7 @@ export async function archiveEvent(eventId: string) {
     // Add archived field to event model if not exists
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
-      data: {
-        // archived: true,
-      },
+      data: { archived: true },
     });
 
     revalidatePath("/events");

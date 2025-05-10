@@ -1,36 +1,37 @@
 "use client";
 
-import { format } from "date-fns";
+import { useUser } from "@clerk/nextjs";
+import { formatDate } from "date-fns";
 import {
-  Archive,
-  CalendarDays,
+  ArchiveIcon,
+  CalendarIcon,
   Clock,
+  ForwardIcon,
+  LinkIcon,
+  MailIcon,
   MapPin,
-  Pencil,
-  UserIcon,
-  UserMinus,
+  PencilIcon,
+  SettingsIcon,
+  ShareIcon,
   Users,
-  X,
+  XIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { archiveEvent, closeEvent } from "@/actions/event";
 import {
-  removeParticipant,
-  updateParticipationStatus,
-} from "@/actions/event-participation";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { removeParticipant } from "@/actions/event-participation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,153 +41,307 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn, isValidUrl, toUTCDateOnly } from "@/lib/utils";
 import { Types } from "@/types/global";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 
-interface EventCardProps {
-  event: Types.Event & {
-    participation: (Types.EventParticipation & {
-      user: Types.User;
-    })[];
-    createdBy: {
-      displayName: string | null;
-    };
-  };
+interface Attendee extends Types.User {
+  status: string;
+}
+function OrganizerInfo({ createdBy }: { createdBy: Types.User }) {
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      <Avatar>
+        <AvatarImage
+          src={createdBy.avatarUrl ?? "/placeholder.svg"}
+          alt={createdBy.displayName ?? "User Avatar"}
+        />
+        <AvatarFallback>
+          {createdBy.displayName?.charAt(0) ?? "U"}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <p className="text-sm font-medium">{createdBy.displayName}</p>
+        <p className="text-muted-foreground text-xs">Organizer</p>
+      </div>
+    </div>
+  );
 }
 
-export function EventCard({ event }: EventCardProps) {
+function AttendeesList({
+  attendees,
+  userId,
+  isPastEvent,
+  isLoading,
+  onRemove,
+}: {
+  attendees: Attendee[];
+  userId: string;
+  isPastEvent: boolean;
+  isLoading: boolean;
+  onRemove: (id: string) => void;
+}) {
+  if (attendees.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        No attendees yet, be the first to attend!
+      </p>
+    );
+  }
+  return (
+    <ScrollArea className="h-[100px] rounded-md border p-2">
+      <div className="space-y-2">
+        {attendees.map((attendee) => (
+          <div key={attendee.id} className="group flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage
+                src={attendee.avatarUrl ?? "/placeholder.svg"}
+                alt={attendee.displayName ?? "User Avatar"}
+              />
+              <AvatarFallback>
+                {attendee.displayName?.charAt(0) ?? "U"}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">
+              {attendee.displayName}
+              {attendee.id === userId && " (You)"}
+              <span className="text-muted-foreground text-xs">
+                {attendee.status === "ACCEPTED" ? " - Accepted" : " - Declined"}
+              </span>
+            </span>
+            {!isPastEvent && (
+              <button
+                className="ml-auto cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                type="button"
+                aria-label="Remove participant"
+                disabled={isLoading}
+                onClick={() => onRemove(attendee.id as string)}
+              >
+                <XIcon className="text-destructive h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+}
+
+function EventShareActions({
+  isPastEvent,
+  mailtoLink,
+  handleClickShareVia,
+  handleCopyLink,
+}: {
+  isPastEvent: boolean;
+  mailtoLink: string;
+  handleClickShareVia: () => void;
+  handleCopyLink: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-1/2"
+          disabled={isPastEvent}
+        >
+          <ShareIcon />
+          Share
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={mailtoLink} prefetch={false}>
+            <MailIcon />
+            Email
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleClickShareVia}>
+          <ForwardIcon />
+          Share via ...
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleCopyLink}>
+          <LinkIcon />
+          Copy Link
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function EventActions({
+  isOrganizer,
+  isPastEvent,
+  isLoading,
+  eventId,
+  handleArchiveEvent,
+  handleCloseEvent,
+}: {
+  isOrganizer: boolean;
+  isPastEvent: boolean;
+  isLoading: boolean;
+  eventId: string;
+  handleArchiveEvent: () => void;
+  handleCloseEvent: () => void;
+}) {
+  return isOrganizer ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="w-1/2">
+          <SettingsIcon />
+          Actions
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {!isPastEvent && (
+          <DropdownMenuItem asChild>
+            <Link href={`/event/${eventId}/edit`} prefetch={false}>
+              <PencilIcon />
+              Edit
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={handleArchiveEvent} disabled={isLoading}>
+          <ArchiveIcon />
+          Archive
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleCloseEvent} disabled={isLoading}>
+          <XIcon />
+          Close
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <Button
+      variant="default"
+      size="sm"
+      className={cn("w-1/2", isPastEvent && "pointer-events-none opacity-50")}
+      asChild
+    >
+      <Link href={`/event/${eventId}`} prefetch={false}>
+        <PencilIcon />
+        Regret
+      </Link>
+    </Button>
+  );
+}
+
+export function EventCard({
+  event,
+}: {
+  event: EventWithParticipation & EventWithCreator;
+}) {
   const { isLoaded, user } = useUser();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const isPastEvent = event.date < new Date();
-  const isCreator = user?.id === event.createdById;
-  const participation = event.participation.find((p) => p.userId === user?.id);
-  const hasAccepted = participation?.status === "ACCEPTED";
+  const {
+    id: eventId,
+    date,
+    endDate,
+    title,
+    location,
+    startTime,
+    endTime,
+    createdBy,
+    participation,
+    hideParticipants,
+    description,
+  } = event;
+  console.log("🚨 - event", event);
+  const link = `${process.env.NEXT_PUBLIC_BASE_URL}/event/${eventId}`;
+  const isOrganizer = createdBy.id === user?.id;
+  const isLocationLink = isValidUrl(location);
 
-  const handleEditEvent = () => {
-    router.push(`/events/${event.id}/edit`);
-  };
+  const attendees = useMemo(
+    () =>
+      participation
+        .filter((p) => p.userId !== createdBy.id)
+        .map((p) => ({ ...p.user, status: p.status })),
+    [participation, createdBy.id],
+  );
 
-  const handleArchiveEvent = async () => {
+  const mailtoLink = useMemo(() => {
+    const link = `${process.env.NEXT_PUBLIC_BASE_URL}/event/${eventId}`;
+    return `mailto:?subject=${encodeURIComponent(
+      `Invitation: ${title}`,
+    )}&body=${encodeURIComponent(
+      `Hi,\n\nYou're invited to the following event:\nTitle: ${title}\nDate & Time: ${formatDate(date, "PP - EEE")}\nLocation: ${location}\nOrganizer: ${createdBy.displayName}\n\nMore details and RSVP: ${link}\n\nHope to see you there!`,
+    )}`;
+  }, [title, location, date, createdBy, eventId]);
+
+  const utcDate = toUTCDateOnly(date);
+
+  const isPastEvent = utcDate < new Date();
+
+  const handleAsyncAction = async (
+    action: () => Promise<{ status: number; message: string }>,
+    successMsg: string,
+    errorMsg: string,
+  ) => {
+    if (isPastEvent) return;
     try {
       setIsLoading(true);
-      const result = await archiveEvent(event.id);
-
+      const result = await action();
       if (result.status === 200) {
-        toast.success(result.message);
+        toast.success(result.message || successMsg);
         router.refresh();
       } else {
-        toast.error(result.message);
+        toast.error(result.message || errorMsg);
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error(error);
-      toast.error("Failed to archive event");
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCloseEvent = async () => {
+  const handleClickShareVia = async () => {
+    if (isPastEvent) return;
     try {
-      setIsLoading(true);
-      const result = await closeEvent(event.id);
-
-      if (result.status === 200) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: unknown) {
-      console.error(error);
-      toast.error("Failed to close event");
-    } finally {
-      setIsLoading(false);
+      await navigator.share({
+        title,
+        text: `Invitation: ${title}`,
+        url: link,
+      });
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  const handleDecline = async () => {
-    try {
-      setIsLoading(true);
-      const result = await updateParticipationStatus(event.id, "DECLINED");
-
-      if (result.status === 200) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: unknown) {
-      console.error(error);
-      toast.error("Failed to decline event");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCopyLink = () => {
+    if (isPastEvent) return;
+    navigator.clipboard.writeText(link);
+    toast.success("Link copied to clipboard");
   };
 
-  const handleJoin = async () => {
-    try {
-      setIsLoading(true);
-      const result = await updateParticipationStatus(event.id, "PENDING");
+  const handleArchiveEvent = () =>
+    handleAsyncAction(
+      () => archiveEvent(eventId),
+      "Event archived",
+      "Failed to archive event",
+    );
 
-      if (result.status === 200) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: unknown) {
-      console.error(error);
-      toast.error("Failed to join event");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleCloseEvent = () =>
+    handleAsyncAction(
+      () => closeEvent(eventId),
+      "Event closed",
+      "Failed to close event",
+    );
 
-  const handleRemoveParticipantConfirm = async (participantId: string) => {
-    try {
-      setIsLoading(true);
-      const result = await removeParticipant(participantId);
-
-      if (result.status === 200) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: unknown) {
-      console.error(error);
-      toast.error("Failed to remove participant");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleRemoveParticipantConfirm = (participantId: string) =>
+    handleAsyncAction(
+      () => removeParticipant(participantId),
+      "Participant removed",
+      "Failed to remove participant",
+    );
 
   if (!isLoaded)
     return (
@@ -205,284 +360,113 @@ export function EventCard({ event }: EventCardProps) {
     );
 
   return (
-    <Card className="relative flex h-full flex-col overflow-hidden">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-xl">{event.title}</CardTitle>
-
-          <Badge variant={isPastEvent ? "secondary" : "default"}>
-            {isPastEvent ? "Past" : "Upcoming"}
-          </Badge>
-        </div>
-        <CardDescription className="space-y-1">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="size-4" />
-            <span className="text-muted-foreground text-sm">
-              {format(event.date, "EEEE, MMMM d, yyyy")}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <UserIcon className="text-muted-foreground size-4" />
-            <span className="text-muted-foreground text-sm">
-              {isCreator ? "Created by you" : "Created by someone else"}
-            </span>
-          </div>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="text-muted-foreground line-clamp-2 flex-1 text-sm">
-          {event.description === "" ? "No description" : event.description}
-        </p>
-
-        {(isCreator || !event.hideParticipants) && (
-          <div className="mt-auto">
-            <div className="flex items-center space-x-2">
-              <Users className="text-muted-foreground h-4 w-4" />
-              <span className="text-sm font-medium">
-                {event.participation.length} Participants
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-center">
-              <div className="mr-2 flex -space-x-2">
-                <TooltipProvider>
-                  {event.participation.slice(0, 5).map((participant) => (
-                    <Tooltip key={participant.id}>
-                      <TooltipTrigger asChild>
-                        <Avatar className="border-background h-8 w-8 border-2">
-                          <AvatarImage
-                            src={participant.user.avatarUrl ?? ""}
-                            alt={participant.user.displayName ?? "User"}
-                          />
-                          <AvatarFallback>
-                            {participant.user.displayName
-                              ?.split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>{participant.user.displayName ?? "User"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </TooltipProvider>
-
-                {event.participation.length > 5 && (
-                  <Avatar className="border-background bg-muted h-8 w-8 border-2">
-                    <AvatarFallback>
-                      +{event.participation.length - 5}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
-              <span className="text-muted-foreground text-sm">
-                {event.participation.length}{" "}
-                {event.participation.length === 1 ? "person" : "people"}
-              </span>
+    <div className="flex flex-wrap items-stretch gap-6">
+      <Card className="relative flex min-h-[400px] w-full flex-col overflow-hidden shadow-lg">
+        {isOrganizer && (
+          <div className="absolute top-0 right-0 z-10 size-[100px]">
+            <div className="bg-primary text-primary-foreground absolute top-[20px] -right-[42px] flex w-[150px] rotate-45 items-center justify-center py-1 text-center text-xs shadow-[0_2px_4px_rgba(0,_0,_0,_0.2)]">
+              Organizer
             </div>
           </div>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between border-t pt-6">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              View Details
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl">{event.title}</DialogTitle>
-              </div>
-            </DialogHeader>
+        <CardHeader className="flex-1 pb-4">
+          <CardTitle className="pr-9 text-xl">{title}</CardTitle>
 
-            <div className="mt-4 space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="size-4" />
-                    <span className="text-sm">
-                      {format(event.date, "EEEE, MMMM d, yyyy")}
-                    </span>
-                  </div>
-                  <Badge variant={isPastEvent ? "secondary" : "default"}>
-                    {isPastEvent ? "Past" : "Upcoming"}
-                  </Badge>
-                </div>
-                {event.startTime && event.endTime && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="size-4" />
-                    <span className="text-sm">
-                      {event.startTime} - {event.endTime}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <MapPin className="size-4" />
-                  <span className="text-sm">{event.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <UserIcon className="size-4" />
-                  <span className="text-sm">
-                    Created by {event.createdBy.displayName}
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-medium">Description</h3>
-                <p className="text-muted-foreground mt-1 text-sm whitespace-pre-wrap">
-                  {event.description === ""
-                    ? "No description"
-                    : event.description}
-                </p>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="mb-2 font-medium">
-                  Participants ({event.participation.length})
-                </h3>
-                <div className="space-y-2">
-                  {event.participation.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={participant.user.avatarUrl ?? ""}
-                            alt={participant.user.displayName ?? "User"}
-                          />
-                          <AvatarFallback>
-                            {participant.user.displayName
-                              ?.split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {participant.user.displayName}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {participant.status.charAt(0).toUpperCase() +
-                              participant.status.slice(1).toLowerCase()}
-                          </p>
-                        </div>
-                      </div>
-                      {isCreator &&
-                        participant.userId !== user?.id &&
-                        participant.status !== "ACCEPTED" && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <UserMinus className="size-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Remove Participant
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to remove{" "}
-                                  {participant.user.displayName || "User"} from
-                                  this event? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleRemoveParticipantConfirm(
-                                      participant.id,
-                                    )
-                                  }
-                                  disabled={isLoading}
-                                >
-                                  Remove
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              {isCreator && !isPastEvent && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleEditEvent}
-                    disabled={isLoading}
-                  >
-                    <Pencil className="mr-2 size-4" />
-                    Edit
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button disabled={isLoading}>Manage Event</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={handleCloseEvent}
-                        disabled={isLoading}
-                      >
-                        <X className="mr-2 size-4" />
-                        Close Event
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={handleArchiveEvent}
-                        disabled={isLoading}
-                      >
-                        <Archive className="mr-2 size-4" />
-                        Archive Event
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {isCreator ? (
-          <Button variant="ghost" size="sm">
-            Share
-          </Button>
-        ) : hasAccepted ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDecline}
-            disabled={isLoading}
+          <CardDescription
+            className="text-muted-foreground line-clamp-2"
+            title={description ?? "Let's meet up and have some fun!"}
           >
-            Decline
-          </Button>
-        ) : (
-          !participation && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleJoin}
-              disabled={isLoading}
+            {description ?? "Let's meet up and have some fun!"}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4 pb-4">
+          {/* Date & Time */}
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 text-sm">
+              <CalendarIcon className="text-muted-foreground h-4 w-4" />
+              <span className="font-medium">Date:</span>
+              <time dateTime={utcDate.toISOString()}>
+                {formatDate(utcDate, "EE, PP")}
+                {endDate && ` - ${formatDate(endDate, "EE, PP")}`}
+              </time>
+            </div>
+
+            {startTime && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="text-muted-foreground h-4 w-4" />
+                <span className="font-medium">Time:</span>
+                <span>
+                  {startTime}
+                  {endTime && ` - ${endTime}`}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="flex items-start gap-2 text-sm">
+            <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
+            <span className="font-medium">Location:</span>
+            <Link
+              href={
+                isLocationLink
+                  ? location
+                  : "https://maps.google.com/?q=${location}"
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
             >
-              Join
-            </Button>
-          )
-        )}
-      </CardFooter>
-    </Card>
+              {isLocationLink ? "Google Maps" : location}
+            </Link>
+          </div>
+
+          {/* Organizer */}
+          <OrganizerInfo createdBy={createdBy} />
+
+          <Separator />
+
+          {/* Attendees */}
+          {hideParticipants ? (
+            <p className="text-muted-foreground text-sm">
+              Attendees will be revealed after the event
+            </p>
+          ) : (
+            <div>
+              <div className="mb-4 flex items-center gap-2">
+                <Users className="text-muted-foreground h-4 w-4" />
+                <h3 className="text-sm font-medium">
+                  Attendees ({attendees.length})
+                </h3>
+              </div>
+              <AttendeesList
+                attendees={attendees}
+                userId={user?.id ?? ""}
+                isPastEvent={isPastEvent}
+                isLoading={isLoading}
+                onRemove={handleRemoveParticipantConfirm}
+              />
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between gap-2 pt-0">
+          <EventShareActions
+            isPastEvent={isPastEvent}
+            mailtoLink={mailtoLink}
+            handleClickShareVia={handleClickShareVia}
+            handleCopyLink={handleCopyLink}
+          />
+          <EventActions
+            isOrganizer={isOrganizer}
+            isPastEvent={isPastEvent}
+            isLoading={isLoading}
+            eventId={eventId}
+            handleArchiveEvent={handleArchiveEvent}
+            handleCloseEvent={handleCloseEvent}
+          />
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

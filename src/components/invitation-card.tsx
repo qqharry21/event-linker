@@ -1,14 +1,9 @@
 "use client";
 
-import type {
-  Event,
-  EventParticipation,
-  ParticipationStatus,
-  User,
-} from "@prisma/client";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { useState } from "react";
 
+import { updateParticipation } from "@/actions/event-participation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,36 +31,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface EventWithCreator extends Event {
-  createdBy: User;
-  participation: (EventParticipation & {
-    user: User;
-  })[];
-}
-
 interface EventDetailProps {
-  event: EventWithCreator;
+  event: EventWithParticipation & EventWithCreator;
   userId: string;
-}
-
-async function updateParticipation(
-  eventId: string,
-  status: ParticipationStatus,
-  comment?: string,
-) {
-  const response = await fetch(`/api/events/${eventId}/participate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status, comment }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update participation");
-  }
-
-  return response.json();
 }
 
 const checkLocationLink = (location: string) => {
@@ -103,15 +71,19 @@ export default function InvitationCard({ event, userId }: EventDetailProps) {
     (participation) =>
       participation.userId === userId && participation.status === "ACCEPTED",
   );
-  console.log("🚨 - isAttending", isAttending);
 
   const handleAccept = async () => {
     try {
       setIsSubmitting(true);
-      await updateParticipation(event.id, "ACCEPTED", "");
-      router.refresh();
-      toast.success("You have accepted the invitation");
-    } catch {
+      const result = await updateParticipation(event.id, "ACCEPTED", "");
+      if (result.status === 200) {
+        toast.success("You have accepted the invitation");
+        router.refresh();
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to accept the invitation");
     } finally {
       setIsSubmitting(false);

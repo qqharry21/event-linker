@@ -1,6 +1,5 @@
 "use client";
 
-import { Types } from "@/types/global";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { EventStatus } from "../type";
@@ -8,7 +7,11 @@ import { EventsFilters } from "./events-filters";
 import { EventsGrid } from "./events-grid";
 import { EventsHeader } from "./events-header";
 
-export const EventsOverview = ({ events }: { events: Types.Event[] }) => {
+export const EventsOverview = ({
+  events,
+}: {
+  events: (EventWithParticipation & EventWithCreator)[];
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
