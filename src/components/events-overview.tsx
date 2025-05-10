@@ -2,10 +2,15 @@
 
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { EventStatus } from "../type";
 import { EventsFilters } from "./events-filters";
 import { EventsGrid } from "./events-grid";
 import { EventsHeader } from "./events-header";
+
+export enum EventStatus {
+  ALL = "all",
+  PAST = "past",
+  CURRENT = "current",
+}
 
 export const EventsOverview = ({
   events,

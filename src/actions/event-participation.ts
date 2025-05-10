@@ -54,7 +54,7 @@ export async function joinEvent(
       comment,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     console.log("Successfully joined event", participation);
 
@@ -103,7 +103,7 @@ export async function removeParticipant(participationId: string) {
       userId: participation.userId,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     return {
       status: 200,
@@ -159,7 +159,7 @@ export async function updateParticipation(
       comment,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     return {
       status: 200,

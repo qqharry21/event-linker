@@ -19,7 +19,7 @@ import { formatDate } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { EventStatus } from "../type";
+import { EventStatus } from "./events-overview";
 
 interface EventsFiltersProps {
   search: string;

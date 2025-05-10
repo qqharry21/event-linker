@@ -39,7 +39,7 @@ export async function createEvent(formData: CreateEvent) {
       title: data.title,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     console.log("Successfully created event", data);
 
@@ -88,7 +88,7 @@ export async function updateEvent(eventId: string, data: UpdateEvent) {
       title: updatedEvent.title,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     return {
       status: 200,
@@ -134,7 +134,7 @@ export async function archiveEvent(eventId: string) {
       title: updatedEvent.title,
     });
 
-    revalidatePath("/events");
+    revalidatePath("/");
 
     return {
       status: 200,

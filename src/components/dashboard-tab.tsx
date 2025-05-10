@@ -11,8 +11,7 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
-  { name: "Dashboard", slug: "" },
-  { name: "Events Overview", slug: "events" },
+  { name: "Overview", slug: "" },
   { name: "Activity Log", slug: "activity-log" },
 ];
 
