@@ -1,0 +1,140 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# General Development Guidelines
+
+## 1. Project Structure Guidelines
+
+### Directory Structure
+
+```
+project_name/
+├── docs/                 # Project documentation
+├── src/                  # Source code
+│   ├── core/             # Core features
+│   ├── utils/            # Utility functions
+│   └── tests/            # Test files
+├── scripts/              # Script files
+├── config/               # Configuration files
+├── .github/              # CI/CD configuration
+├── package.json          # Project configuration
+└── README.md             # Project overview
+```
+
+### Organization Principles
+
+- Maintain a clear and modular project structure
+- Group related functionalities in the same folder
+- Use descriptive and meaningful folder names
+
+## 2. Code Standards
+
+### Naming Conventions
+
+```
+Class names: PascalCase
+Function names: camelCase or snake_case
+Constants: UPPER_SNAKE_CASE
+Variables: camelCase or snake_case
+```
+
+### Code Quality Principles
+
+- Follow SOLID design principles
+- Avoid code duplication (DRY principle)
+- Keep code concise, clear, and readable
+- Prioritize maintainability and scalability
+
+### Error Handling
+
+- Use exception handling appropriately
+- Provide clear and meaningful error messages
+- Log essential errors
+- Gracefully handle edge cases
+
+## 3. Documentation Standards
+
+### Code Comments
+
+```js
+/**
+ * Description of the function
+ *
+ * @param {type} name - Parameter description
+ * @returns {type} Description of the return value
+ */
+```
+
+### Project Documentation
+
+- Keep README and technical documentation up-to-date
+- Write documentation in Chinese
+- Include necessary installation and usage instructions
+- Record key architectural decisions
+
+### Internationalization Preparation
+
+- Use Chinese for code comments
+- Use Chinese for error messages and logs
+- Reserve space for future i18n support
+
+## 4. Development Environment
+
+### Dependency Management
+
+- Use language-specific package managers
+- Lock dependency versions to ensure build stability
+- Regularly update dependencies to patch vulnerabilities
+- Prefer existing libraries/tools over reinventing the wheel
+
+## 5. Version Control Standards
+
+### Basic Configuration
+
+- Use Git for version control
+- Set up appropriate `.gitignore` files
+- Protect the main branch and enforce branch permission control
+
+### Branch Management
+
+- Follow a structured branching model (e.g., Git Flow or Trunk-Based Development)
+- Keep main branch stable; develop features in separate branches
+- Regularly clean up stale branches
+
+### Commit Standards
+
+- Use clear and meaningful commit messages
+- Focus each commit on a single feature or fix
+- Tag versions appropriately
+
+### Code Review
+
+- All changes must go through code review
+- Follow a code review checklist
+- Respond promptly to feedback
+- Ensure code quality and consistency
+
+## 6. Testing Standards
+
+### Testing Principles
+
+- Follow the testing pyramid
+- Maintain clean and maintainable test code
+- Avoid duplicate test logic
+- Ensure adequate test coverage
+
+### Test Types
+
+- **Unit Tests**: For individual functions/modules
+- **Integration Tests**: For module interaction
+- **End-to-End Tests**: For full business flows
+- **Performance Tests**: For validating key functionality under load
+
+## 7. Security Standards
+
+- Use environment variables for sensitive config
+- Avoid hardcoding secrets in code
+- Regularly update dependency versions
+- Perform routine security scans

@@ -85,14 +85,13 @@ export default function EventForm({ onClose }: { onClose: () => void }) {
 
   // Form submission handler
   async function onSubmit({ isFullDayEvent, ...data }: FormValues) {
-    // If isFullDayEvent is false, remove startTIme and endTime from the data
-    if (!isFullDayEvent) {
+    if (isFullDayEvent) {
       data.startTime = null;
       data.endTime = null;
     }
     console.log(data);
     // Handle form submission logic here
-    const res = await createEvent(data);
+    const res = await createEvent({ ...data, archived: false });
 
     if (res.status === 201) {
       form.reset(

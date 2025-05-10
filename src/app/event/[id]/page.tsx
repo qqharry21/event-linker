@@ -1,7 +1,7 @@
-import { EventDetail } from "@/components/event-detail";
+import InvitationCard from "@/components/invitation-card";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 type Params = Promise<{ id: string }>;
 
@@ -9,6 +9,10 @@ export default async function EventPage({ params }: { params: Params }) {
   const { id } = await params;
   const user = await currentUser();
   const userId = user?.id;
+
+  if (!userId) {
+    return redirect("/sign-in");
+  }
 
   const event = await prisma.event.findUnique({
     where: {
@@ -30,5 +34,5 @@ export default async function EventPage({ params }: { params: Params }) {
   }
   console.log("🚨 - event", event);
 
-  return <EventDetail event={event} currentUserId={userId} />;
+  return <InvitationCard event={event} userId={userId} />;
 }
