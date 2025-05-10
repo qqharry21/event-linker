@@ -13,8 +13,7 @@ type Tab = {
 const tabs: Tab[] = [
   { name: "Dashboard", slug: "" },
   { name: "Events Overview", slug: "events" },
-  { name: "History", slug: "history" },
-  { name: "Profile", slug: "profile" },
+  { name: "Activity Log", slug: "activity-log" },
 ];
 
 export default function DashboardTab() {
