@@ -3,10 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { cache } from "react";
 
 export const metadata: Metadata = {
   title: "Events Overview",
+  description: "Check out the events you've created and participated in",
 };
 
 type SearchParams = {
@@ -20,9 +20,9 @@ type SearchParams = {
 type PromiseSearchParams = Promise<SearchParams>;
 
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
-const getEvents = cache(async (userId: string, params: SearchParams) => {
-  //
+const getEvents = async (userId: string, params: SearchParams) => {
   const currentDate = new Date().toISOString();
   const dateRangeCondition = {
     gte: params.from || undefined,
@@ -30,21 +30,10 @@ const getEvents = cache(async (userId: string, params: SearchParams) => {
   };
 
   let statusCondition = dateRangeCondition;
-
-  if (params.status === "current") {
-    statusCondition = { ...dateRangeCondition, gte: currentDate };
-  } else if (params.status === "past") {
+  if (params.status === "past") {
     statusCondition = { ...dateRangeCondition, lte: currentDate };
-  }
-
-  let archivedFilter = undefined;
-
-  if (params.status === "all") {
-    archivedFilter = undefined;
-  } else if (params.status === "past") {
-    archivedFilter = false;
-  } else if (params.status === "current") {
-    archivedFilter = false;
+  } else if (params.status === "current" || !params.status) {
+    statusCondition = { ...dateRangeCondition, gte: currentDate };
   }
 
   return prisma.event.findMany({
@@ -67,9 +56,6 @@ const getEvents = cache(async (userId: string, params: SearchParams) => {
             mode: "insensitive",
           },
         },
-        {
-          archived: archivedFilter,
-        },
       ],
     },
     include: {
@@ -78,16 +64,19 @@ const getEvents = cache(async (userId: string, params: SearchParams) => {
       },
       createdBy: true,
     },
-    orderBy: [{ date: "desc" }, { startTime: "desc" }, { createdAt: "desc" }],
+    orderBy: [
+      { archived: "asc" },
+      { date: "desc" },
+      { startTime: "desc" },
+      { createdAt: "desc" },
+    ],
   });
-});
+};
 
-export default async function Page({
-  searchParams,
-}: {
+export default async function Page(props: {
   searchParams: PromiseSearchParams;
 }) {
-  const params = await searchParams;
+  const searchParams = await props.searchParams;
 
   const { userId } = await auth();
 
@@ -95,7 +84,7 @@ export default async function Page({
     redirect("/sign-in");
   }
 
-  const events = await getEvents(userId, params);
+  const events = await getEvents(userId, searchParams);
 
   if (!events) return <div>Something went wrong</div>;
 

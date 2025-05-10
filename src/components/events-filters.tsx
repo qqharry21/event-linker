@@ -66,11 +66,7 @@ export function EventsFilters({
   const handleStatusChange = useCallback((val: EventStatus) => {
     setSelectedStatus(val);
     const params = new URLSearchParams(window.location.search);
-    if (val === EventStatus.CURRENT) {
-      params.delete("status");
-    } else {
-      params.set("status", val.toString());
-    }
+    params.set("status", val.toString());
     window.history.pushState(null, "", `?${params.toString()}`);
   }, []);
 
